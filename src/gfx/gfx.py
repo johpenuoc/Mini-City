@@ -63,13 +63,14 @@ class Renderer:
         #points_index = self.obj[3]
 
         campos = self.main.cam.pos
+        print(campos)
         for id, p in enumerate(points):
-            p = [
+            '''p = [
                 p[i] + centre[i] for i in range(len(p) - 1)
-            ]
-            perspx = campos[0] - p[0]
-            perspy = campos[1] - p[2]
-            perspz = campos[2] - p[1]
+            ]'''
+            perspx = campos[0] - p[0] + centre[0]
+            perspy = campos[1] - p[1] + centre[1]
+            perspz = campos[2] - p[2] + centre[2]
 
             x, z = self.yrotate(perspx, perspz, self.main.cam.rot)
             y, z = self.xrotate(perspy, z, self.main.cam.rot2)

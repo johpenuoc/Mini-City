@@ -16,29 +16,36 @@ class Camera:
 
         self.fov = [0, 0]
         self.pos = [0, 0, 0]
-        self.rot = 270
-        self.rot2 = 90
+        self.rot = 0
+        self.rot2 = 0
 
-        #pygame.event.set_grab(True)
+        pygame.event.set_grab(True)
+        pygame.mouse.set_visible(False)
 
     def move(self):
-        #pygame.mouse.set_pos(DISZ)
+        mpos = pygame.mouse.get_pos()
+        if mpos[0] > (WISZ[0] * 3) / 4 or mpos[0] < WISZ[0] / 4 or mpos[1] > (WISZ[1] * 3) / 4 or mpos[1] < WISZ[1] / 4:
+            pygame.mouse.set_pos(DISZ)
+
         keys = pygame.key.get_pressed()
         dt = self.main.dt
 
-        new_rot = keys[pygame.K_d] - keys[pygame.K_a]
-        fb = keys[pygame.K_s] - keys[pygame.K_w]
+        fb = keys[pygame.K_w] - keys[pygame.K_s]
+        lr = keys[pygame.K_a] - keys[pygame.K_d]
 
         #self.rot += 10 * dt
-        print(self.rot)
+        #print(self.rot, self.rot2)
 
         mrel = pygame.mouse.get_rel()
         self.rot += mrel[0] * 150 * dt
         self.rot2 += mrel[1] * 150 * dt
 
         #self.rot += new_rot * 10 * dt
-        self.pos[0] += cos(radians(self.rot)) * 5 * fb * dt
-        #self.pos[1] += sin(radians(self.rot)) * 5 * fb * dt
-        self.pos[2] += sin(radians(self.rot)) * 5 * fb * dt
+        self.pos[0] += cos(radians(self.rot + 90)) * 10 * fb * dt
+        self.pos[1] = 0 
+        self.pos[2] -= sin(radians(self.rot + 90)) * 10 * fb * dt
 
-        #self.rot %= 360
+        self.pos[0] -= cos(radians(self.rot + 180)) * 10 * lr * dt
+        self.pos[1] = 0 
+        self.pos[2] += sin(radians(self.rot + 180)) * 10 * lr * dt
+        self.rot %= 360
