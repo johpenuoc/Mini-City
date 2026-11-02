@@ -62,23 +62,26 @@ class Renderer:
         centre = self.obj[3]
         #points_index = self.obj[3]
 
+        campos = self.main.cam.pos
         for id, p in enumerate(points):
-            campos = self.main.cam.pos
+            p = [
+                p[i] + centre[i] for i in range(len(p) - 1)
+            ]
             perspx = campos[0] - p[0]
-            perspy = campos[1] - p[1]
-            perspz = campos[2] - p[2]
+            perspy = campos[1] - p[2]
+            perspz = campos[2] - p[1]
 
             x, z = self.yrotate(perspx, perspz, self.main.cam.rot)
-            y, z = self.xrotate(perspy, z, -self.main.cam.rot2)
+            y, z = self.xrotate(perspy, z, self.main.cam.rot2)
             #x, y = self.zrotate(x, y, -self.main.cam.rot)
-            #y = p[1]
             
             x, y = self.translate_Z(x, y, z)
             x, y = self.translate_coord(x, y)
-            
 
-            #self.point(x, y, 2)
-            points[id][-1] = (x, y)
+            if not z < 0:
+                points[id][-1] = (x, y)
+            else:
+                points[id][-1] = None
 
     def render(self):
         points = self.obj[0]
@@ -90,9 +93,15 @@ class Renderer:
                 i1 = points_index[id - 1]
                 i2 = points_index[id - 2]
 
-                self.connect(points[p_id][-1], points[i1][-1])
-                self.connect(points[i1][-1], points[i2][-1])
-                self.connect(points[i2][-1], points[p_id][-1])
+                p = points[p_id][-1]
+                p1 = points[i1][-1]
+                p2 = points[i2][-1]
+                if not p == None and not p1 == None:
+                    self.connect(points[p_id][-1], points[i1][-1])
+                if not p1 == None and not p2 == None:
+                    self.connect(points[i1][-1], points[i2][-1])
+                if not p2 == None and not p == None:
+                    self.connect(points[i2][-1], points[p_id][-1])
 
                 #self.shader(points[p_id][-1], points[i1][-1], points[i2][-1])
 
