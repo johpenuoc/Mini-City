@@ -24,7 +24,7 @@ class Renderer:
         pygame.draw.rect(self.main.dis, (255, 255, 255), (x, y, s, s))
 
     def translate_Z(self, x, y, z):
-        return (x / (z + self.fov)) * RENDER_SCALE, (y / (z + self.fov)) * RENDER_SCALE
+        return (x / z) * RENDER_SCALE, (y / z) * RENDER_SCALE,
 
     def yrotate(self, x, z, theta):
         c = cos(radians(theta))
@@ -55,25 +55,27 @@ class Renderer:
 
     def vertex_proc(self):
         #self.fov += .2 * self.main.dt
-        self.obj[1] += (50 * self.main.dt) % 360
-        self.obj[2] += (50 * self.main.dt) % 360
+        #self.obj[1] += (50 * self.main.dt) % 360
+        #self.obj[2] += (50 * self.main.dt) % 360
         #self.fov += 3.5 * self.main.dt
         points = self.obj[0]
         centre = self.obj[3]
         #points_index = self.obj[3]
 
         for id, p in enumerate(points):
-            x, z = self.yrotate(p[0], p[2], self.obj[1])
-            y, z = self.xrotate(p[1], z, self.obj[2])
-            x, y = self.zrotate(x, y, 0)
+            campos = self.main.cam.pos
+            perspx = campos[0] - p[0]
+            perspy = campos[1] - p[1]
+            perspz = campos[2] - p[2]
+
+            x, z = self.yrotate(perspx, perspz, self.main.cam.rot)
+            y, z = self.xrotate(perspy, z, -self.main.cam.rot2)
+            #x, y = self.zrotate(x, y, -self.main.cam.rot)
             #y = p[1]
-
-            x += centre[0]
-            y += centre[1]
-            z += centre[2]
-
+            
             x, y = self.translate_Z(x, y, z)
             x, y = self.translate_coord(x, y)
+            
 
             #self.point(x, y, 2)
             points[id][-1] = (x, y)

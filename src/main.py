@@ -12,6 +12,7 @@ if parent_dir not in sys.path:
 
 from data.config import *
 from gfx.gfx import Renderer, Cube
+from camera import Camera
 
 pygame.init()
 pygame.display.set_caption('CYBERPUNK City')
@@ -25,6 +26,7 @@ class Main:
 
         self.c = Cube((0, 0, 50), (15, 15, 15), 0, 90)
         self.ren = Renderer(self)
+        self.cam = Camera(self)
 
 
     def run(self):
@@ -36,6 +38,7 @@ class Main:
                     pygame.quit()
                     sys.exit()
 
+            self.cam.move()
             self.ren.vertex_proc()
 
             self.dis.fill((0, 0, 0))
