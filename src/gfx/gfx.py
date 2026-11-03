@@ -1,6 +1,7 @@
 import pygame
 import sys
-from math import cos, sin, radians, sqrt, floor
+from math import cos, sin, radians, sqrt
+from random import uniform
 
 
 from pathlib import Path
@@ -69,11 +70,15 @@ class Renderer:
             x, z = self.yrotate(perspx, perspz, camrot)
             y, z = self.xrotate(perspy, z, camrot2)
 
+            buf = [0, 0, (x, y, z)]
+
             x, y = self.translate_Z(x, y, z)
             x, y = self.translate_coord(x, y)
 
             if not z < 0:
-                points[id][-1] = (x, y)
+                buf[0] = x
+                buf[1] = y
+                points[id][-1] = buf
             else:
                 points[id][-1] = None
 
@@ -86,27 +91,49 @@ class Renderer:
             if (id + 1) % 3 == 0:
                 i1 = points_index[id - 1]
                 i2 = points_index[id - 2]
-        
+
                 p = points[p_id][-1]
                 p1 = points[i1][-1]
                 p2 = points[i2][-1]
 
                 if self.draw(p, p1, p2):
-                    distance = sqrt((abs(campos[0]) - centre[0])**2 + (abs(campos[2]) - centre[2])**2)
+                    # p_3d = p[2]
+                    # p1_3d = p1[2]
+                    # p2_3d = p2[2]
+
+                    p = p[:2]
+                    p1 = p1[:2]
+                    p2 = p2[:2]
+
+                    x = (abs(campos[0]) - centre[0])**2
+                    y = (abs(campos[2]) - centre[2])**2
+                    distance = sqrt(x + y)
+
                     c = 255 / (distance / 20)
                     if c > 255:
                         c = 255
                     elif c < 0:
                         c = 0
-                    colour = [0, 0, 0]
-                    colour[self.obj[3]] = c
+
+                    change = (c / 255)
+                        
+                    colour = [int(i * change) for i in self.obj[3]]
                     colour = tuple(colour)
                     pygame.draw.polygon(dis, colour, (p, p1, p2))
 
                 
-
+COLOURS = {
+    0 : (0, 0, 0),
+    1 : (255, 0, 0),
+    2 : (0, 255, 0),
+    3 : (0, 0, 255),
+    4 : (255, 255, 0),
+    5 : (255, 0, 255),
+    6 : (0, 255, 255),
+    7 : (255, 255, 255)
+}
 class Cube(Renderer):
-    def __init__(self, centre, dim):
+    def __init__(self, centre, dim, colour):
         super().__init__()
         self.fov = 0
 
@@ -148,13 +175,12 @@ class Cube(Renderer):
 
         ]
 
-        colour = 0
         self.obj = [
-            points, centre, index, colour
+            points, centre, index, COLOURS[colour]
         ]
 
 class Floor(Renderer):
-    def __init__(self, centre, dim):
+    def __init__(self, centre, dim, colour):
         super().__init__()
         self.fov = 0
 
@@ -162,8 +188,7 @@ class Floor(Renderer):
         height2 = dim[1] / 2
         depth2 = dim[2] / 2
         points = [
-            # top left                      bottom left                 top right                    bottom right
-             [-width2, height2, -depth2],[width2, height2, -depth2],
+            [-width2, height2, -depth2],[width2, height2, -depth2],
             [-width2, height2, depth2], [width2, height2, depth2]
         ]
         points = [[*i, i] for i in points]
@@ -175,5 +200,135 @@ class Floor(Renderer):
 
         colour = 2
         self.obj = [
-            points, centre, index, colour
+            points, centre, index, COLOURS[colour]
         ]
+
+class Sphere(Renderer):
+    def __init__(self, centre, dim, colour):
+        super().__init__()
+        self.fov = 0
+
+        width2 = dim[0] / 2
+        height2 = dim[1] / 2
+        depth2 = dim[2] / 2
+        points = [
+            [0, height2, 0],                         
+            [0, -height2, 0],                      
+            
+            [width2, 0, 0],                       
+            [-width2, 0, 0],                    
+            [0, 0, depth2],                        
+            [0, 0, -depth2],                        
+            
+            [width2 * 0.7, height2 * 0.7, 0],         
+            [-width2 * 0.7, height2 * 0.7, 0],      
+            [0, height2 * 0.7, depth2 * 0.7],        
+            [0, height2 * 0.7, -depth2 * 0.7],        
+            
+            [width2 * 0.7, -height2 * 0.7, 0],        
+            [-width2 * 0.7, -height2 * 0.7, 0],     
+            [0, -height2 * 0.7, depth2 * 0.7],       
+            [0, -height2 * 0.7, -depth2 * 0.7],       
+        ]
+
+        points = [[*i, i] for i in points]
+
+        index = [
+            0, 6, 8,
+            0, 8, 7,
+            0, 7, 9,
+            0, 9, 6,
+            
+            6, 2, 8,   8, 2, 4,
+            8, 4, 7,   7, 4, 3,
+            7, 3, 9,   9, 3, 5,
+            9, 5, 6,   6, 5, 2,
+
+            2, 10, 4,  4, 10, 12,
+            4, 12, 3,  3, 12, 11,
+            3, 11, 5,  5, 11, 13,
+            5, 13, 2,  2, 13, 10,
+
+            1, 8, 10,
+            1, 10, 12,
+            1, 12, 11,
+            1, 11, 13,
+            1, 13, 10
+        ]
+
+        self.obj = [
+            points, centre, index, COLOURS[colour]
+        ]
+
+class Pyramid(Renderer):
+    def __init__(self, centre, dim, colour):
+        super().__init__()
+        self.fov = 0
+
+        width2 = dim[0] / 2
+        height2 = dim[1] / 2
+        depth2 = dim[2] / 2
+
+        points = [
+            [0, height2, 0],        
+            [-width2, -height2, -depth2],
+            [width2, -height2, -depth2], 
+            [width2, -height2, depth2], 
+            [-width2, -height2, depth2]  
+        ]
+        
+        points = [[*i, i] for i in points]
+
+        index = [
+
+            0, 1, 2,
+            0, 2, 3,
+            0, 3, 4,
+            0, 4, 1,
+    
+            1, 4, 3,
+            1, 3, 2
+        ]
+
+        self.obj = [points, centre, index, COLOURS[colour]]
+
+class Cylinder(Renderer):
+    def __init__(self, centre, dim, colour):
+        super().__init__()
+        self.fov = 0
+
+        width2 = dim[0] / 2
+        height2 = dim[1] / 2
+        depth2 = dim[2] / 2
+
+        points = [
+            [0, height2, 0],  
+            [0, -height2, 0],   
+  
+            [width2, height2, 0],  
+            [-width2, height2, 0],
+            [0, height2, depth2],  
+            [0, height2, -depth2], 
+          
+            [width2, -height2, 0],
+            [-width2, -height2, 0],
+            [0, -height2, depth2], 
+            [0, -height2, -depth2] 
+        ]
+        
+        points = [[*i, i] for i in points]
+
+        index = [
+    
+            0, 4, 2,  0, 2, 5,  0, 5, 3,  0, 3, 4,
+        
+            1, 6, 8,  1, 8, 6,  #
+            1, 9, 6,  1, 7, 9,  1, 8, 7,
+     
+            2, 6, 4,  4, 6, 8,
+            4, 8, 3,  3, 8, 7,
+            3, 7, 5,  5, 7, 9,
+            5, 9, 2,  2, 9, 6
+        ]
+
+        self.obj = [points, centre, index, COLOURS[colour]]
