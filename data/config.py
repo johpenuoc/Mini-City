@@ -1,3 +1,3 @@
-WISZ = (16 * 40, 9 * 40)
-DISZ = (16 * 20, 9 * 20)
-RENDER_SCALE = 200
+WISZ = (16 * 120, 9 * 120)
+DISZ = (16 * 120, 9 * 120)
+RENDER_SCALE = 1000
